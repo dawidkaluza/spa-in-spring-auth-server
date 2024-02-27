@@ -26,3 +26,16 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.register('copyWebApp', Copy) {
+    from "$rootDir/web/dist"
+    into "$buildDir/resources/main/static/."
+}
+
+tasks.named('compileJava') {
+    dependsOn(':web:npmBuild')
+}
+
+tasks.named('processResources') {
+    dependsOn('copyWebApp')
+}
