@@ -1,8 +1,11 @@
 package pl.dkaluza;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,7 +20,10 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -30,30 +36,68 @@ import java.util.UUID;
 class WebSecurityConfig {
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
-        throws Exception {
+    SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+            .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.consentPage("http://localhost:9090/consent"))
             .oidc(Customizer.withDefaults());	// Enable OpenID Connect 1.0
         http
-            // Redirect to the login page when not authenticated from the
-            // authorization endpoint
+            .cors(Customizer.withDefaults())
             .exceptionHandling((exceptions) -> exceptions
                 .defaultAuthenticationEntryPointFor(
-                    new LoginUrlAuthenticationEntryPoint("/login"),
+                    new LoginUrlAuthenticationEntryPoint("http://localhost:9090/login"),
                     new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
                 )
             )
-            // Accept access tokens for User Info and/or Client Registration
             .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()));
 
-        return http.cors(Customizer.withDefaults()).build();
+        return http.build();
     }
 
     @Bean
     @Order(2)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
-        throws Exception {
+    SecurityFilterChain authenticationSecurityFilterChain(HttpSecurity http) throws Exception {
+        //noinspection Convert2MethodRef
+        http
+            .securityMatcher("/login", "/logout")
+            .cors(Customizer.withDefaults())
+            .csrf((csrf) -> csrf.disable())
+            .formLogin(form -> form
+                .loginPage("http://localhost:9090/login")
+                .successHandler((req, res, auth) -> {
+                    res.resetBuffer();
+                    res.setStatus(HttpServletResponse.SC_OK);
+                    res.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+                    var savedReq = new HttpSessionRequestCache().getRequest(req, res);
+                    res.getWriter()
+                        .append("{\"redirectUrl\": \"")
+                        .append(savedReq == null ? "" : savedReq.getRedirectUrl())
+                        .append("\"}");
+                    res.flushBuffer();
+                })
+                .failureHandler((req, res, ex) ->
+                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                )
+            )
+            .logout(logout -> logout
+                .logoutSuccessUrl("http://localhost:9090/login?logout")
+            )
+            .exceptionHandling(handler -> handler
+                .authenticationEntryPoint(
+                    new HttpStatusEntryPoint(HttpStatus.FORBIDDEN)
+                )
+            )
+            .authorizeHttpRequests(authorize -> authorize
+                .anyRequest().authenticated()
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(3)
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests((authorize) -> authorize
                 .anyRequest().authenticated()
@@ -71,7 +115,7 @@ class WebSecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
-        config.addAllowedOrigin("http://127.0.0.1:9090");
+        config.addAllowedOrigin("http://localhost:9090");
         config.setAllowCredentials(true);
         source.registerCorsConfiguration("/**", config);
         return source;
