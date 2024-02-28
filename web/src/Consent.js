@@ -1,0 +1,5 @@
+const Consent = () => {
+
+};
+
+export { Consent };

@@ -1,9 +1,27 @@
 import React from "react";
-function App() {
+import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
+import {Login} from "./Login";
+import {Consent} from "./Consent";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Navigate to={"/login"} />
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/consent",
+    element: <Consent />
+  }
+]);
+
+const App = () => {
   return (
-    <div className="App">
-      <h1>Hello World..!</h1>
-    </div>
+    <RouterProvider router={router} />
   );
 }
+
 export default App;

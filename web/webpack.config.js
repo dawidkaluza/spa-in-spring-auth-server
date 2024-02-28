@@ -2,6 +2,10 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = {
   mode: "development",
+  devServer: {
+    port: 9090,
+    historyApiFallback: true,
+  },
   entry: "/src/index.js", // main js
   output: {
     path: path.resolve(__dirname, "dist"), // output folder
