@@ -11,6 +11,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -65,6 +67,7 @@ class WebSecurityConfig {
             .csrf((csrf) -> csrf.disable())
             .formLogin(form -> form
                 .loginPage("http://localhost:9090/login")
+                .loginProcessingUrl("/login")
                 .successHandler((req, res, auth) -> {
                     res.resetBuffer();
                     res.setStatus(HttpStatus.OK.value());
@@ -77,9 +80,7 @@ class WebSecurityConfig {
                         .append("\"}");
                     res.flushBuffer();
                 })
-                .failureHandler((req, res, ex) ->
-                    res.sendError(HttpStatus.UNAUTHORIZED.value())
-                )
+                .failureHandler((req, res, ex) -> res.setStatus(HttpStatus.UNAUTHORIZED.value()))
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("http://localhost:9090/login?logout")
@@ -140,12 +141,17 @@ class WebSecurityConfig {
     }
 
     @Bean
-    UserDetailsService userDetailsService() {
+    UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         return new InMemoryUserDetailsManager(
             User.builder()
                 .username("admin")
-                .password("admin")
+                .password(passwordEncoder.encode("admin"))
                 .build()
         );
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }

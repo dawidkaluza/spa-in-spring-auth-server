@@ -3,7 +3,6 @@ import {useState} from "react";
 import {Alert, AlertTitle, Box, Button, CircularProgress, TextField, Typography} from "@mui/material";
 import LoginIcon from '@mui/icons-material/Login';
 import axios from "axios";
-import {useNavigate} from "react-router-dom";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8080/",
@@ -18,7 +17,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
 
   const handleFieldChange = (event) => {
     const target = event.target;
@@ -54,7 +52,7 @@ const Login = () => {
             // noinspection JSUnresolvedReference
             const redirectUrl = response.data?.redirectUrl;
             if (redirectUrl) {
-              navigate(redirectUrl);
+              window.location = redirectUrl;
             }
             break;
           }
@@ -93,7 +91,7 @@ const Login = () => {
         variant={"h5"}
         align={"center"}
       >
-        Login
+        Login page
       </Typography>
 
       <TextField
