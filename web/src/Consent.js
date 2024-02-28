@@ -56,7 +56,7 @@ const Consent = () => {
         Do you want to give access to your account to {clientId}?
       </Typography>
 
-      <input type={"hidden"} name={"client-id"} value={clientId} />
+      <input type={"hidden"} name={"client_id"} value={clientId} />
       <input type={"hidden"} name={"state"} value={state} />
 
       {scopes &&
@@ -67,7 +67,7 @@ const Consent = () => {
 
           <FormGroup>
             {scopes.map((scope) =>
-              <FormControlLabel key={scope} control={<Checkbox name={scope} />} label={scope} />
+              <FormControlLabel key={scope} control={<Checkbox name="scope" value={scope} />} label={scope} />
             )}
           </FormGroup>
         </>
