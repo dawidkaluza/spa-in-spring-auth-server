@@ -1,6 +1,5 @@
 package pl.dkaluza;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -10,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -19,10 +20,10 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -66,7 +67,7 @@ class WebSecurityConfig {
                 .loginPage("http://localhost:9090/login")
                 .successHandler((req, res, auth) -> {
                     res.resetBuffer();
-                    res.setStatus(HttpServletResponse.SC_OK);
+                    res.setStatus(HttpStatus.OK.value());
                     res.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
                     var savedReq = new HttpSessionRequestCache().getRequest(req, res);
@@ -77,7 +78,7 @@ class WebSecurityConfig {
                     res.flushBuffer();
                 })
                 .failureHandler((req, res, ex) ->
-                    res.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                    res.sendError(HttpStatus.UNAUTHORIZED.value())
                 )
             )
             .logout(logout -> logout
@@ -97,20 +98,18 @@ class WebSecurityConfig {
 
     @Bean
     @Order(3)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(Customizer.withDefaults())
             .authorizeHttpRequests((authorize) -> authorize
                 .anyRequest().authenticated()
-            )
-            // Form login handles the redirect to the login page from the
-            // authorization server filter chain
-            .formLogin(Customizer.withDefaults());
+            );
 
-        return http.cors(Customizer.withDefaults()).build();
+        return http.build();
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedHeader("*");
@@ -122,7 +121,7 @@ class WebSecurityConfig {
     }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository() {
+    RegisteredClientRepository registeredClientRepository() {
         RegisteredClient publicClient = RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("webapp")
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
@@ -138,5 +137,15 @@ class WebSecurityConfig {
             .build();
 
         return new InMemoryRegisteredClientRepository(publicClient);
+    }
+
+    @Bean
+    UserDetailsService userDetailsService() {
+        return new InMemoryUserDetailsManager(
+            User.builder()
+                .username("admin")
+                .password("admin")
+                .build()
+        );
     }
 }
