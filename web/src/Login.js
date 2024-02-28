@@ -137,7 +137,7 @@ const Login = () => {
         <Alert severity={"success"}>
           <AlertTitle>Success</AlertTitle>
           <Typography>
-            You've logged in succesfully.
+            You've logged in successfully.
           </Typography>
         </Alert>
       }

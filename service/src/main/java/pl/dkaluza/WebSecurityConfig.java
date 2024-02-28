@@ -131,7 +131,7 @@ class WebSecurityConfig {
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .clientSettings(ClientSettings.builder()
-                .requireAuthorizationConsent(false)
+                .requireAuthorizationConsent(true)
                 .requireProofKey(true)
                 .build()
             )
