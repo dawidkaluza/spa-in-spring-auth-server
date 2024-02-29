@@ -1,4 +1,0 @@
-rootProject.name = 'spa-in-spring-auth-server'
-include 'web'
-include 'service'
-
