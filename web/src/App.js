@@ -1,7 +1,6 @@
 import React from "react";
 import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import {Login} from "./Login";
-import {Consent} from "./Consent";
 
 const router = createBrowserRouter([
   {
@@ -11,10 +10,6 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
-  },
-  {
-    path: "/consent",
-    element: <Consent />
   }
 ]);
 

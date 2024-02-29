@@ -4,13 +4,7 @@ import {Alert, AlertTitle, Box, Button, CircularProgress, TextField, Typography}
 import LoginIcon from '@mui/icons-material/Login';
 import axios from "axios";
 
-const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080/",
-  headers: {
-    "Accept": "application/json",
-    "Content-Type": "application/json"
-  }
-});
+const axiosInstance = axios.create();
 
 const Login = () => {
   const [fields, setFields] = useState({});
@@ -31,45 +25,46 @@ const Login = () => {
 
     setLoading(true);
 
-    const { username, password } = fields;
-    return axiosInstance
-      .post(
-        "/login",
-        `username=${username}&password=${password}`,
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          }
-        }
-      )
-      .then(response => {
-        switch (response.status) {
-          case 200: {
-            setSuccess(true);
-            setError(false);
+const { username, password } = fields;
+axiosInstance
+  .post(
+    "http://localhost:8080/login",
+    `username=${username}&password=${password}`,
+    {
+      withCredentials: true,
+      headers: {
+        "Accept": "application/json",
+        'Content-Type': 'application/x-www-form-urlencoded',
+      }
+    }
+  )
+  .then(response => {
+    switch (response.status) {
+      case 200: {
+        setSuccess(true);
+        setError(false);
 
-            // noinspection JSUnresolvedReference
-            const redirectUrl = response.data?.redirectUrl;
-            if (redirectUrl) {
-              window.location = redirectUrl;
-            }
-            break;
-          }
-
-          default: {
-            setSuccess(false);
-            setError(true);
-          }
+        // noinspection JSUnresolvedReference
+        const redirectUrl = response.data?.redirectUrl;
+        if (redirectUrl) {
+          window.location = redirectUrl;
         }
-      })
-      .catch(() => {
+        break;
+      }
+
+      default: {
         setSuccess(false);
         setError(true);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      }
+    }
+  })
+  .catch(() => {
+    setSuccess(false);
+    setError(true);
+  })
+  .finally(() => {
+    setLoading(false);
+  });
   }
 
   return (

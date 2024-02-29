@@ -42,7 +42,6 @@ class WebSecurityConfig {
     SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-            .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.consentPage("http://localhost:9090/consent"))
             .oidc(Customizer.withDefaults());	// Enable OpenID Connect 1.0
         http
             .cors(Customizer.withDefaults())
