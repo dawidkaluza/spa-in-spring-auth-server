@@ -9,3 +9,5 @@ Want to test it out?
 4. Prepare OAuth2 authorization request, open it in a browser and go through the whole flow. (Login to auth server via l:admin p:admin)
 
 OAuth2 authorization request example: http://localhost:8080/oauth2/authorize?response_type=code&client_id=webapp&state=1234xyz&code_challenge=MMRGwBwWyq4DLBuYbwPHRF6HGyVnN_UAUDnQ8GVGjn8&code_challenge_method=S256
+
+Implementation explained here: https://medium.com/@dkaluza19/login-page-as-spa-in-spring-authorization-server-22b87e9ca1fa
